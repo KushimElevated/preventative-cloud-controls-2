@@ -93,7 +93,7 @@ Use `/api/auth/demo` with `security` or `cloud` to receive a separate reviewer s
 
 ## Development and tests
 
-Python 3.12+, uv 0.12.19, Node 22+, npm. Exact resolved dependencies are in `backend/uv.lock` and `frontend/package-lock.json`.
+Python 3.12+, uv 0.12.19, Node 22.22.2+ (or 24.15+), npm. Exact resolved dependencies are in `backend/uv.lock` and `frontend/package-lock.json`.
 
 ```bash
 cd backend
@@ -113,6 +113,7 @@ Without `TEST_DATABASE_URL`, tests use separate temporary SQLite databases and t
 cd frontend
 npm ci
 npm run typecheck
+npm run test:unit
 npm run build
 # With the full Compose application running:
 npx playwright install chromium
@@ -121,7 +122,7 @@ npm run test:e2e
 
 For local processes instead of containers, configure `DATABASE_URL`, run `uv run alembic upgrade head` and `uv run python -m app.cli seed`, then `uv run uvicorn app.main:app --host 127.0.0.1`. Run `npm run dev` in `frontend`; its default API target is `127.0.0.1:8000`. SQLite may be used for an offline preview with a workspace-specific `sqlite:///...` URL; PostgreSQL is the intended Compose runtime.
 
-CI jobs: PostgreSQL backend tests; frontend typecheck/build; complete Compose startup plus a browser workflow and restart health check. No infrastructure deployment workflow is included.
+CI jobs: PostgreSQL backend tests; frontend typecheck, A2UI renderer/validation tests and production build; complete Compose startup plus three browser workflows and restart health check. No infrastructure deployment workflow is included. See [verification results](PROGRESS.md).
 
 ## Persistence and reset
 
