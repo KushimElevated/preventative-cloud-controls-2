@@ -16,14 +16,14 @@ test('A2UI engineering workspace filters evidence, selects scopes and confirms a
   await page.getByRole('button', { name: 'Enter workspace' }).click();
   await page.getByRole('link').filter({ hasText: 'Open engineering assistant' }).click();
   await expect(page.getByRole('heading', { name: 'From question to governed decision.' })).toBeVisible();
-  await expect(page.getByText('search-customer', { exact: true })).toBeVisible();
+  await expect(page.getByRole('table').getByText('search-customer', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Noncompliant 5', exact: true }).click();
-  await expect(page.getByText('search-claims', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('table').getByText('search-claims', { exact: true })).toHaveCount(0);
   await page.getByLabel('Filter assessed resources').fill('customer');
   await expect(page.getByText('1 of 8 shown', { exact: false })).toBeVisible();
   await page.getByLabel('Assistant target scope').selectOption('az-search-pilot');
   await expect(page.getByText('2 of 2 shown', { exact: false })).toBeVisible();
-  await expect(page.getByText('search-analytics', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('table').getByText('search-analytics', { exact: true })).toHaveCount(0);
   await page.getByLabel('Assistant target scope').selectOption('az-prod');
   await expect(page.getByText('8 of 8 shown', { exact: false })).toBeVisible();
   const readiness = page.getByText('Readiness review checklist');

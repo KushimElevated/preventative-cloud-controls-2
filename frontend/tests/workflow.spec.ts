@@ -28,6 +28,7 @@ test('Azure intent → assessment → distinct approvals → export → mock ver
   await page.getByRole('button', { name: 'Create package' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('link', { name: 'Rollouts & handoff' }).click();
+  await expect(page.getByRole('heading', { name: 'Progressive rollout & handoff' })).toBeVisible();
   for (const who of ['security', 'cloud']) {
     await switchIdentity(page, who);
     await page.getByLabel(/Review rationale /).first().fill('Reviewed the precise demo manifest, prerequisites and rollback.');
