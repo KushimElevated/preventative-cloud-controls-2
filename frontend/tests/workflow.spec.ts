@@ -1,5 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  page.on('pageerror', error => console.error('BROWSER_ERROR', error.stack || error.message));
+});
+
 async function switchIdentity(page: Page, identity: string) {
   const picker = page.getByLabel('Switch demo identity');
   await picker.selectOption(identity);

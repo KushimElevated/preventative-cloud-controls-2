@@ -7,6 +7,8 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select, text
@@ -15,7 +17,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import models as m, schemas as s
+from . import models as m, schemas as s, assistant
 from .config import Settings
 from .db import make_engine, session_factory
 from .domain import DomainError, PROVIDERS, aware, in_scope, utcnow
@@ -76,16 +78,34 @@ def create_app(settings=None, engine=None, clock=utcnow):
 
     @app.exception_handler(DomainError)
     async def domain_error(request, exc):
-        if exc.status in {401, 403}:
+        is_assistant = request.url.path.startswith("/api/assistant/")
+        if exc.status in {401, 403} or is_assistant:
             with sessions.begin() as db:
-                db.add(m.AuditEvent(actor_id=getattr(request.state, "actor", "anonymous"), action="AUTHORIZATION_DENIED",
+                db.add(m.AuditEvent(actor_id=getattr(request.state, "actor", "anonymous"),
+                    action="ASSISTANT_COMMAND_REJECTED" if is_assistant else "AUTHORIZATION_DENIED",
                     object_id="request", scope_id=None, detail={"status": exc.status},
                     correlation_id=getattr(request.state, "correlation", "unknown"), created_at=clock()))
         return JSONResponse({"detail": exc.message, "request_id": getattr(request.state, "correlation", None)}, exc.status)
 
+    @app.exception_handler(RequestValidationError)
+    async def invalid_input(request, exc):
+        if request.url.path.startswith("/api/assistant/"):
+            with sessions.begin() as db:
+                db.add(m.AuditEvent(actor_id=getattr(request.state, "actor", "anonymous"),
+                    action="ASSISTANT_PAYLOAD_REJECTED", object_id="request", scope_id=None,
+                    detail={"status": 422}, correlation_id=getattr(request.state, "correlation", "unknown"), created_at=clock()))
+            return JSONResponse({"detail": "Assistant payload is outside the allowed contract."}, 422)
+        return await request_validation_exception_handler(request, exc)
+
     @app.exception_handler(StaleDataError)
     @app.exception_handler(IntegrityError)
     async def conflict(request, exc):
+        if request.url.path.startswith("/api/assistant/"):
+            with sessions.begin() as db:
+                db.add(m.AuditEvent(actor_id=getattr(request.state, "actor", "anonymous"),
+                    action="ASSISTANT_COMMAND_REJECTED", object_id="request", scope_id=None,
+                    detail={"status": 409, "reason": "concurrent_change"},
+                    correlation_id=getattr(request.state, "correlation", "unknown"), created_at=clock()))
         return JSONResponse({"detail": "Concurrent change or relational conflict. Reload and retry."}, 409)
 
     def get_db():
@@ -162,6 +182,24 @@ def create_app(settings=None, engine=None, clock=utcnow):
     @app.get("/api/dashboard")
     def dashboard(svc: Svc):
         return svc.dashboard()
+
+    @app.get("/api/assistant/catalog")
+    def assistant_catalog(svc: Svc):
+        svc.permission("read")
+        return {"catalog_id": assistant.CATALOG, "protocol": assistant.VERSION,
+                "surface_schema": assistant.SurfaceBundle.model_json_schema(), "mode": "DETERMINISTIC"}
+
+    @app.post("/api/assistant/surfaces")
+    def assistant_surface(data: assistant.SurfaceQuery, svc: Svc):
+        return assistant.render(svc, data)
+
+    @app.post("/api/assistant/commands")
+    def assistant_command(data: assistant.Command, svc: Svc):
+        return assistant.execute(svc, data)
+
+    @app.post("/api/assistant/intents/{key}/confirm", status_code=201)
+    def assistant_confirm(key: str, data: assistant.HumanConfirmation, svc: Svc):
+        return assistant.confirm_exception(svc, key, data)
 
     @app.get("/api/controls")
     def controls(svc: Svc, offset: int = 0, limit: int = 50):

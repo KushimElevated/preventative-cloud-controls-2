@@ -20,7 +20,7 @@ def fixtures(ready=False):
         ("search-unmapped", None, None, "UNKNOWN"),
     ]):
         resources.append({"id": f"search-{idx+1}", "name": name, "type": "Microsoft.Search/searchServices",
-                          "scope_id": "az-prod", "provider": "AZURE", "application": owner or "Unmapped",
+                          "scope_id": "az-search-pilot" if idx < 2 else "az-prod", "provider": "AZURE", "application": owner or "Unmapped",
                           "owner": owner, "readiness": readiness,
                           "configuration": {"publicNetworkAccess": value} if value else {},
                           "readiness_evidence": "Synthetic readiness fixture; no connectivity test executed."})
@@ -38,7 +38,7 @@ def fixtures(ready=False):
                               ["BlockPublicAcls", "IgnorePublicAcls", "BlockPublicPolicy", "RestrictPublicBuckets"]}}})
     if ready:
         for r in resources:
-            if r["scope_id"] == "az-prod" and r["type"] == "Microsoft.Search/searchServices":
+            if r["scope_id"] in {"az-prod", "az-search-pilot"} and r["type"] == "Microsoft.Search/searchServices":
                 r["configuration"] = {"publicNetworkAccess": "Enabled" if r["id"] == "search-5" else "Disabled"}
                 r["owner"] = r["owner"] or "Demo owner resolved"
                 r["readiness"] = "READY"
@@ -71,6 +71,8 @@ def seed(db, now=None):
         ("az-root", "Azure estate", "AZURE", "MANAGEMENT_GROUP", None, "/providers/Microsoft.Management/managementGroups/demo"),
         ("az-prod", "Azure · Production", "AZURE", "SUBSCRIPTION", "az-root", "/subscriptions/00000000-0000-4000-8000-000000000001"),
         ("az-dev", "Azure · Development", "AZURE", "SUBSCRIPTION", "az-root", "/subscriptions/00000000-0000-4000-8000-000000000002"),
+        ("az-search-pilot", "Azure · Search pilot resource group", "AZURE", "RESOURCE_GROUP", "az-prod",
+         "/subscriptions/00000000-0000-4000-8000-000000000001/resourceGroups/search-pilot"),
         ("aws-root", "AWS estate", "AWS", "ROOT", None, "r-demo"),
         ("aws-prod", "AWS · Production OU", "AWS", "OU", "aws-root", "ou-demo-prod00001"),
         ("aws-account-a", "AWS · Claims account", "AWS", "ACCOUNT", "aws-prod", "111111111111"),

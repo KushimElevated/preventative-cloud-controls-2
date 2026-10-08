@@ -5,6 +5,7 @@ import { api, downloadJson } from '@/lib/api';
 import type { Control, Exception, Rollout } from '@/lib/types';
 import { useApp } from './context';
 import { Badge, date, Empty, Heading, Icon, Metric, Notice, Panel, Provider } from './ui';
+import AssistantWorkspace from './assistant/workspace';
 
 function ControlTable({ controls }: { controls: Control[] }) {
   return controls.length ? <div className="table-wrap"><table><thead><tr><th>Security control</th><th>Provider</th><th>Lifecycle</th><th>Assessment</th><th/></tr></thead><tbody>{controls.map(c => <tr key={c.id} className="click-row"><td><Link href={`/controls/${c.id}`}><strong>{c.name}</strong><small>Revision {c.latest_revision} · {c.security_owner}</small></Link></td><td><Provider value={c.provider}/></td><td><Badge value={c.lifecycle}/></td><td>{c.latest_assessment ? <Badge value={!c.latest_assessment.current ? 'UNKNOWN' : c.latest_assessment.report.ready ? 'READY' : 'BLOCKED'}/> : <span className="muted text-small">Not assessed</span>}</td><td><Link href={`/controls/${c.id}`} aria-label={`Open ${c.name}`}><Icon name="arrow"/></Link></td></tr>)}</tbody></table></div> : <Empty title="No controls in your scope">Create a control or select an authorized demo identity.</Empty>;
@@ -19,6 +20,7 @@ export function DashboardPage() {
       <button className="button" disabled={app.user.role !== 'CONTROL_ENGINEER'} onClick={() => app.openControl()}><Icon name="plus"/>New control</button>
     </Heading>
     <Notice>Local engineering workspace. All inventory, approvals, and pipeline results are synthetic. <strong>Live cloud deployment is disabled.</strong></Notice>
+    <Link href="/assistant" className="assistant-launcher"><span className="assistant-symbol"><Icon/></span><div><span className="eyebrow">A new way to engineer controls</span><h2>Ask a question. Explore the evidence.</h2><p>Assess Azure AI Search public access, review exceptions, and prepare a governed handoff in one workspace.</p></div><span className="button secondary">Open engineering assistant <Icon name="arrow"/></span></Link>
     <div className="metrics">
       <Metric label="Preventive controls" value={m.controls} note={`${m.assessed} assessed · AWS and Azure`}/>
       <Metric label="Verified demo coverage" value={m.coverage_percent === null ? 'N/A' : `${m.coverage_percent}%`} note={`${m.protected_pairs} of ${m.applicable_pairs} applicable control-resource pairs`} tone="green-text"/>
@@ -59,12 +61,13 @@ export function DetailPage({ id, section = 'overview', refreshKey }: { id: strin
   useEffect(() => { let active = true; setError(''); void api<Control>(`/controls/${id}`).then(r => { if (active) { setControl(r); setScope(previous => previous || r.scope_id); } }).catch(e => { if (active) setError(e.message); }); return () => { active = false; }; }, [id, refreshKey, app.user.id]);
   if (error) return <Notice tone="error">{error}</Notice>;
   if (!c) return <div className="loading">Loading control…</div>;
+  if (section === 'workspace') return <AssistantWorkspace controlId={id} scopeId={c.scope_id}/>;
   const assessment = c.latest_assessment;
   const author = app.user.role === 'CONTROL_ENGINEER';
   const scopedOptions = app.scopes.filter(s => s.provider === c.provider && (s.id === c.scope_id || s.parent_id === c.scope_id));
   return <>
     <Heading eyebrow="Control catalog / Detail" title={c.name} subtitle={c.objective}>
-      <button className="button secondary" disabled={!author || app.busy} onClick={() => app.openControl(c)}>New revision</button>
+      <div className="button-row">{c.provider === 'AZURE' && <Link className="button" href={`/controls/${c.id}/workspace`}>Open engineering assistant <Icon name="arrow"/></Link>}<button className="button secondary" disabled={!author || app.busy} onClick={() => app.openControl(c)}>New revision</button></div>
     </Heading>
     <div className="row-meta" style={{ marginTop: -12, marginBottom: 17 }}><Provider value={c.provider}/><Badge value={c.lifecycle}/><span className="badge">Revision {c.latest_revision}</span><span className="text-small muted">{c.scope_id} · {c.severity.toLowerCase()} priority</span></div>
     <div className="tabs">{[['overview','Overview'],['implementations','Implementation'],['simulation','Impact assessment'],['history','Revision history']].map(([key,label]) => <Link className={`tab ${section === key ? 'active' : ''}`} key={key} href={`/controls/${c.id}${key === 'overview' ? '' : '/' + key}`}>{label}</Link>)}</div>

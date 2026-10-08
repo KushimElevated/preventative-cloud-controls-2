@@ -38,7 +38,7 @@ def test_custom_policy_is_not_silently_evaluated():
 
 def test_configuration_and_request_counts_are_distinct():
     resources, requests = fixtures()
-    report = assess(AzurePolicyProvider(), AZURE_TEMPLATE, resources, [], requests, {"az-prod"}, NOW)
+    report = assess(AzurePolicyProvider(), AZURE_TEMPLATE, resources, [], requests, {"az-prod", "az-search-pilot"}, NOW)
     assert report["evaluated"] == sum(report["counts"].values()) == 8
     assert report["counts"] == {"COMPLIANT": 1, "NON_COMPLIANT": 5, "UNKNOWN": 1, "NOT_APPLICABLE": 1}
     assert report["predicted_denied"] == 1

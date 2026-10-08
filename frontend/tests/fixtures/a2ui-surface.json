@@ -1,0 +1,323 @@
+{
+  "mode": "DETERMINISTIC",
+  "surface_id": "control-32c71a1309644016aeea9be41e97981e",
+  "assessment_id": "5d203b69-ef54-48c3-819d-2e21e6b3a57e",
+  "expected_revision": 1,
+  "evidence_digest": "c56374904c94b3f65dfe025c15ee77e1ad1a2aea1610654ffbe4ad00ae344b69",
+  "messages": [
+    {
+      "version": "v0.9.1",
+      "createSurface": {
+        "surfaceId": "control-32c71a1309644016aeea9be41e97981e",
+        "catalogId": "urn:cloud-control:engineering-catalog:1"
+      }
+    },
+    {
+      "version": "v0.9.1",
+      "updateComponents": {
+        "surfaceId": "control-32c71a1309644016aeea9be41e97981e",
+        "components": [
+          {
+            "id": "root",
+            "component": "EngineeringWorkspace",
+            "children": [
+              "summary",
+              "impact",
+              "policy",
+              "evidence",
+              "exceptions",
+              "rollout",
+              "gate"
+            ]
+          },
+          {
+            "id": "summary",
+            "component": "ControlSummary",
+            "data": {
+              "control_id": "azure-search",
+              "name": "Prevent public access to Azure AI Search",
+              "objective": "Enterprise search services must disable public network access unless an effective, time-bound exemption applies.",
+              "revision": 1,
+              "severity": "HIGH",
+              "scope_name": "Azure \u00b7 Production"
+            }
+          },
+          {
+            "id": "impact",
+            "component": "ImpactAssessment",
+            "data": {
+              "assessment_id": "5d203b69-ef54-48c3-819d-2e21e6b3a57e",
+              "scope_id": "az-prod",
+              "scopes": [
+                {
+                  "id": "az-prod",
+                  "label": "Azure \u00b7 Production"
+                },
+                {
+                  "id": "az-search-pilot",
+                  "label": "Azure \u00b7 Search pilot resource group"
+                }
+              ],
+              "evaluated": 8,
+              "counts": {
+                "COMPLIANT": 1,
+                "NON_COMPLIANT": 5,
+                "UNKNOWN": 1,
+                "NOT_APPLICABLE": 1
+              },
+              "rows": [
+                {
+                  "id": "search-1",
+                  "name": "search-claims",
+                  "application": "Claims",
+                  "owner": "Claims",
+                  "result": "COMPLIANT",
+                  "reason": "Public access explicitly disabled.",
+                  "exception": "NONE",
+                  "readiness_result": "READY"
+                },
+                {
+                  "id": "search-2",
+                  "name": "search-customer",
+                  "application": "Customer Experience",
+                  "owner": "Customer Experience",
+                  "result": "NON_COMPLIANT",
+                  "reason": "Public access enabled; this does not establish unauthenticated exposure.",
+                  "exception": "NONE",
+                  "readiness_result": "BLOCKED"
+                },
+                {
+                  "id": "search-3",
+                  "name": "search-assistant",
+                  "application": "Digital Assistant",
+                  "owner": "Digital Assistant",
+                  "result": "NON_COMPLIANT",
+                  "reason": "Public access enabled; this does not establish unauthenticated exposure.",
+                  "exception": "PENDING",
+                  "readiness_result": "BLOCKED"
+                },
+                {
+                  "id": "search-4",
+                  "name": "search-analytics",
+                  "application": "Analytics",
+                  "owner": "Analytics",
+                  "result": "NON_COMPLIANT",
+                  "reason": "Public access enabled; this does not establish unauthenticated exposure.",
+                  "exception": "APPROVED_UNAPPLIED",
+                  "readiness_result": "BLOCKED"
+                },
+                {
+                  "id": "search-5",
+                  "name": "search-legacy",
+                  "application": "Legacy Platform",
+                  "owner": "Legacy Platform",
+                  "result": "NON_COMPLIANT",
+                  "reason": "Public access enabled; this does not establish unauthenticated exposure.",
+                  "exception": "EFFECTIVE",
+                  "readiness_result": "READY"
+                },
+                {
+                  "id": "search-6",
+                  "name": "search-partner",
+                  "application": "Partner Services",
+                  "owner": "Partner Services",
+                  "result": "NON_COMPLIANT",
+                  "reason": "Public access enabled; this does not establish unauthenticated exposure.",
+                  "exception": "EXPIRED",
+                  "readiness_result": "BLOCKED"
+                },
+                {
+                  "id": "search-7",
+                  "name": "search-unmapped",
+                  "application": "Unmapped",
+                  "owner": null,
+                  "result": "UNKNOWN",
+                  "reason": "publicNetworkAccess missing or unsupported; no default inferred.",
+                  "exception": "NONE",
+                  "readiness_result": "BLOCKED"
+                },
+                {
+                  "id": "storage-1",
+                  "name": "storage-documents",
+                  "application": "Documents",
+                  "owner": "Documents",
+                  "result": "NOT_APPLICABLE",
+                  "reason": "Different resource type.",
+                  "exception": "NONE",
+                  "readiness_result": "NOT_APPLICABLE"
+                }
+              ],
+              "predicted_denied": 1,
+              "requests_total": 2,
+              "applications": [
+                "Analytics",
+                "Customer Experience",
+                "Digital Assistant",
+                "Legacy Platform",
+                "Partner Services",
+                "Unmapped"
+              ]
+            }
+          },
+          {
+            "id": "policy",
+            "component": "PolicyDiffViewer",
+            "data": {
+              "baseline": [
+                {
+                  "id": "azure-existing-audit",
+                  "scope_id": "az-prod",
+                  "effect": "Audit",
+                  "observed_at": "2026-10-08T12:00:00"
+                }
+              ],
+              "proposed_document": "{\n  \"policyDefinitionId\": \"/providers/Microsoft.Authorization/policyDefinitions/ee980b6d-0eca-4501-8d54-f6290fd512c3\",\n  \"definitionVersion\": \"1.0.1\",\n  \"parameters\": {\n    \"effect\": {\n      \"value\": \"Deny\"\n    }\n  },\n  \"enforcementMode\": \"Default\"\n}",
+              "implementation_digest": "e58bb3a4ed713c17925fd74e6ecbfd8ba76a3e35c04bac94fa42711c0e97a390",
+              "limitation": "Create/update guardrail only; no existing-resource remediation or connectivity proof."
+            }
+          },
+          {
+            "id": "evidence",
+            "component": "EvidencePanel",
+            "data": {
+              "snapshot_id": "bb0e09d9-b93f-45c8-898d-d9a04a660aae",
+              "assessed_at": "2026-10-08T12:00:00",
+              "collected_at": "2026-10-08T12:00:00+00:00",
+              "items": [
+                {
+                  "label": "Observed configuration",
+                  "detail": "Persisted synthetic inventory and native-exemption records; no live cloud scan.",
+                  "kind": "OBSERVED"
+                },
+                {
+                  "label": "Request impact",
+                  "detail": "Predictions apply only to the recorded sample requests. Resource counts are not outage predictions.",
+                  "kind": "SIMULATION_ESTIMATE"
+                },
+                {
+                  "label": "Connectivity readiness",
+                  "detail": "READY is a synthetic fixture assertion. Private endpoints, DNS and application connectivity have not been tested.",
+                  "kind": "OBSERVED"
+                },
+                {
+                  "label": "Recommended next step",
+                  "detail": "Resolve blockers, obtain connectivity evidence and review expiring exceptions before preparing a pilot. No AI suggestions were generated.",
+                  "kind": "DETERMINISTIC_GUIDANCE"
+                }
+              ],
+              "blockers": [
+                "search-analytics: readiness evidence missing",
+                "search-analytics: remediate or apply a reviewed native exemption",
+                "search-assistant: readiness evidence missing",
+                "search-assistant: remediate or apply a reviewed native exemption",
+                "search-customer: readiness evidence missing",
+                "search-customer: remediate or apply a reviewed native exemption",
+                "search-partner: readiness evidence missing",
+                "search-partner: remediate or apply a reviewed native exemption",
+                "search-unmapped: application owner missing",
+                "search-unmapped: configuration evidence unknown",
+                "search-unmapped: readiness evidence missing"
+              ]
+            }
+          },
+          {
+            "id": "exceptions",
+            "component": "ExceptionReview",
+            "data": {
+              "items": [
+                {
+                  "id": "exception-pending",
+                  "resource_ids": [
+                    "search-3"
+                  ],
+                  "status": "REQUESTED",
+                  "disposition": "PENDING",
+                  "expires_at": "2026-10-28T12:00:00"
+                },
+                {
+                  "id": "exception-unapplied",
+                  "resource_ids": [
+                    "search-4"
+                  ],
+                  "status": "APPROVED",
+                  "disposition": "APPROVED_UNAPPLIED",
+                  "expires_at": "2026-10-14T12:00:00"
+                },
+                {
+                  "id": "exception-effective",
+                  "resource_ids": [
+                    "search-5"
+                  ],
+                  "status": "APPROVED",
+                  "disposition": "EFFECTIVE",
+                  "expires_at": "2026-11-02T12:00:00"
+                },
+                {
+                  "id": "exception-expired",
+                  "resource_ids": [
+                    "search-6"
+                  ],
+                  "status": "APPROVED",
+                  "disposition": "EXPIRED",
+                  "expires_at": "2026-10-07T12:00:00"
+                }
+              ],
+              "request_options": [
+                {
+                  "id": "search-2",
+                  "label": "search-customer"
+                },
+                {
+                  "id": "search-3",
+                  "label": "search-assistant"
+                },
+                {
+                  "id": "search-4",
+                  "label": "search-analytics"
+                },
+                {
+                  "id": "search-5",
+                  "label": "search-legacy"
+                },
+                {
+                  "id": "search-6",
+                  "label": "search-partner"
+                },
+                {
+                  "id": "search-7",
+                  "label": "search-unmapped"
+                }
+              ]
+            }
+          },
+          {
+            "id": "rollout",
+            "component": "RolloutTimeline",
+            "data": {
+              "ready": false,
+              "existing": [],
+              "next_steps": [
+                "Resolve configuration, ownership and connectivity evidence gaps.",
+                "Review time-bound exceptions and confirm native exemption state.",
+                "Prepare a version-bound package with a Cloud Engineering recovery runbook.",
+                "Collect distinct Security and Cloud Engineering reviews, then stage a pilot."
+              ]
+            }
+          },
+          {
+            "id": "gate",
+            "component": "ApprovalGate",
+            "data": {
+              "current": true,
+              "ready": false,
+              "stale_reasons": [],
+              "can_assess": true,
+              "can_request": true,
+              "can_plan": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -39,6 +39,8 @@ Opaque, expiring bearer sessions are generated server-side. Role and scope grant
 
 ## Five-minute walkthrough
 
+For the new interactive experience, choose **Open engineering assistant** on the dashboard or Azure Control Detail. Ask the prefilled Azure AI Search question, filter the resource evidence, select the production/pilot scope, review readiness and prepare an exception draft or governed handoff. It uses real A2UI rendering with a deterministic backend and requires no AI credentials. [A2UI architecture, security contract and extension guide](docs/a2ui-workspace.md).
+
 1. Enter as **Control engineer**. Open the Azure AI Search control and inspect its initial impact assessment. Configuration, request effects, exceptions, and readiness are separate.
 2. Switch to **Demo administrator** → Demo workspace → **Load remediated fixture**. This creates synthetic readiness evidence; it does not remediate anything in Azure.
 3. Switch to **Control engineer** → Azure control → Impact assessment → **Run assessment** → **Prepare rollout**. Enter a rollback/recovery runbook.
@@ -51,6 +53,8 @@ Opaque, expiring bearer sessions are generated server-side. Role and scope grant
 The AWS example intentionally shows an account with missing/insecure Block Public Access prerequisites. Narrow its assessment to the protected Claims account to exercise a ready scope. The supported SCP protects an established baseline; it does not establish that baseline or provide an audit effect.
 
 ## What works
+
+- Selectable A2UI workspace with seven custom renderers, validated surfaces, scoped commands, explicit evidence provenance and expiring human-confirmation drafts.
 
 - Control creation, immutable revisions, draft deletion, and catalog retirement via API.
 - Supported AWS SCP and Azure Policy implementations with digest-bound fixture evaluators.
@@ -142,13 +146,15 @@ frontend/
   app/          Next.js routing, layout and styles
   components/   connected workspace, pages and forms
   lib/          typed API client and response shapes
-  tests/        Playwright journey and scoped-access smoke test
+  tests/        A2UI renderer/contract tests, server fixture, Playwright workflows
 ops/            local PostgreSQL role bootstrap
 docs/           architecture, assumptions, feasibility and handoff/security contracts
 .github/        verification workflow only
 ```
 
 ## Known limitations
+
+- A2UI supports the deterministic Azure AI Search assessment flow and a bounded custom catalog. Other natural-language intents return an explicit limitation; no LLM integration is enabled.
 
 - Not production-ready. Local identity switching is deliberately insecure outside a loopback-only demo. Nonlocal environments and live deployment configuration fail startup.
 - Only two exact documented template evaluators exist. No arbitrary-policy interpretation, full IAM simulation, live reachability analysis, automatic remediation, or deployed cloud verification.

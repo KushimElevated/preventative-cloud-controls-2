@@ -7,16 +7,27 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --import tsx --test tests/unit/*.test.tsx"
   },
-  "dependencies": { "next": "16.4.0", "react": "19.3.0", "react-dom": "19.3.0" },
+  "dependencies": {
+    "@a2ui/react": "0.12.0",
+    "@a2ui/web_core": "0.12.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "3.25.76"
+  },
   "devDependencies": {
     "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "^4.1.0",
+    "@types/jsdom": "30.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "jsdom": "30.1.2",
     "tailwindcss": "^4.1.0",
+    "tsx": "4.20.6",
     "typescript": "~5.9.3"
   }
 }

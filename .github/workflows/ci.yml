@@ -42,7 +42,7 @@ jobs:
         with: {node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: npm ci --no-audit --no-fund
         working-directory: frontend
-      - run: npm run typecheck && npm run build
+      - run: npm run typecheck && npm run test:unit && npm run build
         working-directory: frontend
         env: {NEXT_TELEMETRY_DISABLED: '1'}
   compose-smoke:
