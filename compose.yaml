@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: controls
+      POSTGRES_USER: controls_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
+      CONTROL_APP_PASSWORD: ${CONTROL_APP_PASSWORD:?Copy .env.example to .env first}
+    volumes:
+      - controls-db:/var/lib/postgresql/data
+      - ./ops/init-db.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U controls_owner -d controls"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://controls_owner:${POSTGRES_PASSWORD}@db:5432/controls
+      APP_ENV: local
+    command: ["sh", "-c", "/app/.venv/bin/alembic upgrade head && /app/.venv/bin/python -m app.cli seed"]
+    depends_on:
+      db: {condition: service_healthy}
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://controls_app:${CONTROL_APP_PASSWORD}@db:5432/controls
+      APP_ENV: ${APP_ENV:-local}
+      AUTH_MODE: ${AUTH_MODE:-demo}
+      LIVE_DEPLOYMENT: ${LIVE_DEPLOYMENT:-false}
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  web:
+    build:
+      context: ./frontend
+      args: {API_URL: "http://api:8000"}
+    environment:
+      API_URL: http://api:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  controls-db:
